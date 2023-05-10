@@ -18,6 +18,7 @@ namespace BMtool.Application.Interfaces
         List<RegisterModel> GetUser(int id);
         List<RegisterModel> Register(UpdateDto model);
 
-        List<RegisterModel> UpdatedList(int id, UpdateDto model);
+        void UpdatedList(int id, UpdateDto model);
+        void UpdatedListUsingStoredProc(int id, UpdateDto model);
     }
 }

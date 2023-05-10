@@ -62,16 +62,16 @@ namespace BMtool.Core.Entities
         public int Id { get; set; }
         [Required]
         [Display(Name = "First Name")]
-        public string FName { get; set; }
+        public string FName { get; set; } = string.Empty;
         [Required]
         [Display(Name = "Last Name")]
-        public string LName { get; set; }
+        public string LName { get; set; } = string.Empty;
         [Required]
         [DataType(DataType.EmailAddress)]
-        public string OfficeEmail { get; set; }
+        public string OfficeEmail { get; set; }= string.Empty;
         [Required]
         [DataType(DataType.EmailAddress)]
-        public string PersonalEmail { get; set; }
+        public string PersonalEmail { get; set; } =string.Empty;
         [Required]
         public bool EmployeeType { get; set; }
         [Required]
@@ -80,9 +80,6 @@ namespace BMtool.Core.Entities
         public int Experience { get; set; }
         //[Required]
         //public string Role { get; set; }
-        [Required]
-        [Display(Name = "Phone Number")]
-        //[Phone]
-        public string Phone { get; set; }
+        [Required][Display(Name = "Phone Number")] public string Phone { get; set; } = string.Empty;
     }
 }

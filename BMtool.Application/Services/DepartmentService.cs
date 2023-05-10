@@ -39,11 +39,9 @@ namespace BMtool.Application.Services
             return departmentmodel;
         }
 
-        public List<RegisterModel> UpdatedList(int id, UpdateDto model)
+        public void UpdatedList(int id, UpdateDto model)
         {
-          var Dto=  _departmentRepository.UpdateRegisteredUserAsync(id, model).ToList();
-            var modelo = _mapper.Map<List<RegisterModel>>(Dto);
-            return modelo;
+            _departmentRepository.UpdateRegisteredUserAsync(id, model);
         }
 
 
@@ -55,6 +53,11 @@ namespace BMtool.Application.Services
             var departmentdto = _departmentRepository.RegisterAsync(model);
             var departmentmodel = _mapper.Map<List<RegisterModel>>(departmentdto);
             return departmentmodel;
+        }
+
+        public void UpdatedListUsingStoredProc(int id, UpdateDto model)
+        {
+            _departmentRepository.UpdateRegisteredUserAsyncUsingStoredProc(id, model);
         }
 
 

@@ -14,6 +14,9 @@ namespace BMtool.Core.Repository
         List<UpdateDto> GetRegisteredUserById(int id);
         List<UpdateDto> RegisterAsync(UpdateDto model);
 
-       List<UpdateDto> UpdateRegisteredUserAsync(int id, UpdateDto model);
+        Task UpdateRegisteredUserAsync(int id, UpdateDto model);
+
+        Task UpdateRegisteredUserAsyncUsingStoredProc(int id, UpdateDto model);
     }
+
 }

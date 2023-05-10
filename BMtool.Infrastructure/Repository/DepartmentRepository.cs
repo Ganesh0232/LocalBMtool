@@ -4,6 +4,7 @@ using BMtool.Infrastructure.Data.Context;
 using Dapper;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
@@ -80,14 +81,14 @@ namespace BMtool.Infrastructure.Repository
             return (list.ToList());
         }
 
-        public List<UpdateDto> UpdateRegisteredUserAsync(int id, UpdateDto model)
+        public async Task UpdateRegisteredUserAsync(int id, UpdateDto model)
         {
             //To check whether mailAddress is valid or not
 
             //    MailAddress mail = new MailAddress(model.Email);
 
             //  if (IsValidEmail(model.Email) && IsValidPhoneNumber(model.PhoneNumber) )
-            
+            {
 
                 var connection = _context.CreateConnection();
                 var sql = @"UPDATE [dbo].[UserStory19Table]
@@ -108,13 +109,11 @@ namespace BMtool.Infrastructure.Repository
                     @number = model.Phone
                 });
 
-
-           // var connection = _context.CreateConnection();
-
-            return connection.Query<UpdateDto>("Select * from Userstory19Table").ToList();
+            }
 
 
-            
+
+
 
 
 
@@ -173,5 +172,21 @@ namespace BMtool.Infrastructure.Repository
             return regex.IsMatch(phoneNumber);
         }
 
+        public async Task UpdateRegisteredUserAsyncUsingStoredProc(int id, UpdateDto model)
+        {
+            // Define the connection string
+            var connection = _context.CreateConnection();
+
+            // Define the stored procedure name
+            string storedProcedure = "UpdateTable";
+
+            // Create a new SqlConnection object
+            using (connection)
+            {
+                // Execute the stored procedure using Dapper
+                connection.Execute(storedProcedure, new { id, model.FName, model.LName,model.PersonalEmail, model.OfficeEmail, model.EmployeeType,model.DepartmentId,model.Experience,model.Phone }, commandType: CommandType.StoredProcedure);
+            }
+                                                                              //Fname, Lname, PersonalEmail, OfficeEmail, EmployeeType, DepartmentId, Experience, Phone
+        }
     }
 }

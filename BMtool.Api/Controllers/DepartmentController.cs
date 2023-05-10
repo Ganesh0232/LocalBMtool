@@ -59,7 +59,8 @@ namespace BMtool.Api.Controllers
             try
             {
                 _departmentService.UpdatedList(id, model);
-                return Ok("User updated");
+
+                return Ok(model);
             }
             catch (Exception ex)
             {
@@ -90,7 +91,23 @@ namespace BMtool.Api.Controllers
             //return departments;
         }
 
-        [HttpPost("CreateUser")]
+        [HttpPut("UpdateUserUsingStoredProc")]
+
+        public IActionResult UpdateUserUsingStoredProc(int id, UpdateDto model)
+        {
+            try
+            {
+                _departmentService.UpdatedListUsingStoredProc(id, model);
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+            [HttpPost("CreateUser")]
 
         public List<RegisterModel> CreateUser([FromBody] UpdateDto model)
         {
