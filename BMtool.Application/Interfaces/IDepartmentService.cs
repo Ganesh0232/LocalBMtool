@@ -20,5 +20,7 @@ namespace BMtool.Application.Interfaces
 
         void UpdatedList(int id, UpdateDto model);
         void UpdatedListUsingStoredProc(int id, UpdateDto model);
+
+        void ExcelExpo(string fileName);
     }
 }

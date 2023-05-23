@@ -15,6 +15,7 @@ namespace BMtool.Application.Interfaces
        List<RegisterModel> RegisterAsync(RegisterModel model);
 
         Task<List<RegisterModel>> UpdateUser(int id , RegisterModel model);
-       
+        
+
     }
 }

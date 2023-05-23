@@ -17,6 +17,8 @@ namespace BMtool.Core.Repository
         Task UpdateRegisteredUserAsync(int id, UpdateDto model);
 
         Task UpdateRegisteredUserAsyncUsingStoredProc(int id, UpdateDto model);
+        void Excelfile(string fileName);
+
     }
 
 }

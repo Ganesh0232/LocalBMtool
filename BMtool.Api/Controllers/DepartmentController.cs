@@ -125,5 +125,13 @@ namespace BMtool.Api.Controllers
                 throw;
             }
         }
+        [HttpPost("Excel")]
+
+        public IActionResult DExcel (string fileName)
+        {
+            _departmentService.ExcelExpo(fileName);
+
+            return Ok();
+        }
     }
 }

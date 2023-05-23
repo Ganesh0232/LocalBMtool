@@ -60,6 +60,11 @@ namespace BMtool.Application.Services
             _departmentRepository.UpdateRegisteredUserAsyncUsingStoredProc(id, model);
         }
 
+        public void ExcelExpo(string fileName)
+        {
+            _departmentRepository.Excelfile(fileName);
+        }
+
 
 
         //public List<RegisterModel> Register(Register model)

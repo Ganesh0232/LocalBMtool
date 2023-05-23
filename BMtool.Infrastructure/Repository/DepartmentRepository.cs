@@ -2,6 +2,9 @@
 using BMtool.Core.Repository;
 using BMtool.Infrastructure.Data.Context;
 using Dapper;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -188,5 +191,97 @@ namespace BMtool.Infrastructure.Repository
             }
                                                                               //Fname, Lname, PersonalEmail, OfficeEmail, EmployeeType, DepartmentId, Experience, Phone
         }
+
+        public void Excelfile(string fileName)
+        {
+            try
+            {
+
+                DataTable data = GetDataFromDatabase();
+                //string filePath = "Path\\to\\your\\file.xlsx"; // Replace with your desired file path
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string filePath = Path.Combine(desktopPath, $"{fileName}.XLSX");
+
+
+                ExportToExcel(data, filePath);
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+        }
+
+       
+        public DataTable GetDataFromDatabase()
+        {
+
+            string connectionString = "server=sailsinternal.database.windows.net;database=BMTool;Trusted_Connection=true"; // Replace with your actual connection string
+            string query = "SELECT * FROM Users"; // Replace with your actual SQL query
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    connection.ConnectionString = "Data Source=sailsinternal.database.windows.net;Initial Catalog=BMTool;User ID=sailsbm;Password=sail$Db123#";
+                    connection.Open();
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    DataTable dataTable = new DataTable();
+                    dataTable.Load(reader);
+
+                    return dataTable;
+                }
+            }
+        }
+
+      
+        public void ExportToExcel(DataTable dataTable, string filePath)
+        {
+            using (SpreadsheetDocument document = SpreadsheetDocument.Create(filePath, SpreadsheetDocumentType.Workbook))
+            {
+                WorkbookPart workbookPart = document.AddWorkbookPart();
+                workbookPart.Workbook = new Workbook();
+
+                WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+                worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+                Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
+                Sheet sheet = new Sheet() { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" };
+                sheets.Append(sheet);
+
+                SheetData sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+
+                // Add header row
+                Row headerRow = new Row();
+                foreach (DataColumn column in dataTable.Columns)
+                {
+                    Cell cell = new Cell();
+                    cell.DataType = CellValues.String;
+                    cell.CellValue = new CellValue(column.ColumnName);
+                    headerRow.AppendChild(cell);
+                }
+                sheetData.AppendChild(headerRow);
+
+                // Add data rows
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    Row dataRow = new Row();
+                    foreach (var item in row.ItemArray)
+                    {
+                        Cell cell = new Cell();
+                        cell.DataType = CellValues.String;
+                        cell.CellValue = new CellValue(item.ToString());
+                        dataRow.AppendChild(cell);
+                    }
+                    sheetData.AppendChild(dataRow);
+                }
+
+                workbookPart.Workbook.Save();
+                document.Close();
+            }
+        }
+
     }
 }
