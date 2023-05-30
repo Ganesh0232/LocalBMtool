@@ -1,11 +1,5 @@
 ﻿using BMtool.Application.Models;
 using BMtool.Core.Entities;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BMtool.Application.Interfaces
 {
@@ -22,5 +16,6 @@ namespace BMtool.Application.Interfaces
         void UpdatedListUsingStoredProc(int id, UpdateDto model);
 
         void ExcelExpo(string fileName);
+        void ImportFile();
     }
 }

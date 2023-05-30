@@ -2,6 +2,9 @@
 using BMtool.Application.Models;
 using BMtool.Core.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 
 namespace BMtool.Api.Controllers
 {
@@ -107,7 +110,7 @@ namespace BMtool.Api.Controllers
             }
         }
 
-            [HttpPost("CreateUser")]
+        [HttpPost("CreateUser")]
 
         public List<RegisterModel> CreateUser([FromBody] UpdateDto model)
         {
@@ -127,11 +130,80 @@ namespace BMtool.Api.Controllers
         }
         [HttpPost("Excel")]
 
-        public IActionResult DExcel (string fileName)
+        public IActionResult DExcel(string fileName)
         {
             _departmentService.ExcelExpo(fileName);
 
             return Ok();
         }
+
+        [HttpPost("ExcelImport")]
+
+        public IActionResult ImportExcel()
+        {
+            try
+            {
+
+                _departmentService.ImportFile();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+
+
+        }
+
+         [HttpGet("IST")]
+        public DateTime GetIST()
+        {
+
+            // Get the current UTC time
+            DateTime utcTime = DateTime.UtcNow;
+
+
+
+            // Specify the Indian Standard Time zone
+            TimeZoneInfo istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+
+
+
+            // Convert UTC time to IST
+            DateTime istTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, istZone);
+
+
+
+            Console.WriteLine("Current time in IST: " + istTime.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            //  return Ok( istTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            return istTime;
+
+
+        }
+        //public string GetToken()
+        //{
+        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        //    var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        //    var token = new JwtSecurityToken(
+        //    _configuration["Jwt:Issuer"],
+        //    _configuration["Jwt:Audience"],
+        //    expires: GetIST().AddSeconds(10),
+        //    signingCredentials: credentials
+        //    );
+        //    //var tokenInfo = new TokenInfo
+        //    //{
+        //    //    Token = new JwtSecurityTokenHandler().WriteToken(token),
+        //    //   // ValidTo = token.ValidTo
+        //    //};
+
+
+
+        //    //return tokenInfo;
+        //    // return token.ValidTo;
+        //    return new JwtSecurityTokenHandler().WriteToken(token);
+        //}
+
     }
 }

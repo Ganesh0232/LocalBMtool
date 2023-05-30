@@ -65,6 +65,11 @@ namespace BMtool.Application.Services
             _departmentRepository.Excelfile(fileName);
         }
 
+        public void ImportFile()
+        {
+            _departmentRepository.Import();
+        }
+
 
 
         //public List<RegisterModel> Register(Register model)
