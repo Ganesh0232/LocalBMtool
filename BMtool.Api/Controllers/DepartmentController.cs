@@ -18,6 +18,10 @@ namespace BMtool.Api.Controllers
         {
             this._departmentService = departmentService ?? throw new ArgumentNullException(nameof(departmentService));
         }
+
+
+
+
         /// <summary>
         /// Retrieves a list of departments from the database.
         /// </summary>

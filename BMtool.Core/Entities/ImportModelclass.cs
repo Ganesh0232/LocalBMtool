@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BMtool.Application.Models
 {
-   public class ImportModelclass
+    public class ImportModelclass
     {
-        public int Id { get; set; } 
+        public int ID { get; set; }
         public string EmployeeNumber { get; set; }
         public string FName { get; set; }
         public string LName { get; set; }
@@ -18,16 +18,15 @@ namespace BMtool.Application.Models
         public string OfficeEmail { get; set; }
         public string Mobile { get; set; }
         public string PersonalEmail { get; set; }
-        public int EmployeeType { get; set; }
-        public string Experience { get; set; }
+        public bool EmployeeType { get; set; }
+        public int Experience { get; set; }
         public int DesignationId { get; set; }
-        public int IsInProject { get; set; }
-        public int IsUpskilling { get; set; }
-        public int IsWorkingOnInternalTool { get; set; }
+        public bool IsInProject { get; set; }
+        public bool IsUpskilling { get; set; }
+        public bool IsWorkingOnInternalTool { get; set; }
         public int ProjectId { get; set; }
         public int NotesId { get; set; }
-        public string Password { get; set; }
-        public int IsFirstLogin { get; set; }
+        public bool IsFirstLogin { get; set; }
         public int DeptId { get; set; }
         public int CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }
@@ -35,6 +34,7 @@ namespace BMtool.Application.Models
         public DateTime ModifiedOn { get; set; }
         public DateTime JoinedOn { get; set; }
         public string Location { get; set; }
-        public int IsActive { get; set; }
+        public bool IsActive { get; set; }
+     
     }
 }

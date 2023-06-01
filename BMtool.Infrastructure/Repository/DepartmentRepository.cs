@@ -9,21 +9,14 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
-using Excel = Microsoft.Office.Interop.Excel;
-using System.Data.OleDb;
 using OfficeOpenXml;
-using System.Data.SqlClient;
 using BMtool.Application.Models;
 using System.Text;
 using System.Globalization;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using System.IO;
-using System.Linq;
 using ExcelDataReader;
-using DocumentFormat.OpenXml.Office2010.Excel;
+using System.Collections.Concurrent;
+using Microsoft.Office.Interop.Excel;
+using FastMember;
 
 namespace BMtool.Infrastructure.Repository
 {
@@ -210,7 +203,7 @@ namespace BMtool.Infrastructure.Repository
             try
             {
 
-                DataTable data = GetDataFromDatabase1();
+                System.Data.DataTable data = GetDataFromDatabase1();
 
 
                 //string filePath = "Path\\to\\your\\file.xlsx"; // Replace with your desired file path
@@ -239,7 +232,7 @@ namespace BMtool.Infrastructure.Repository
         }
 
 
-        public DataTable GetDataFromDatabase1()
+        public System.Data.DataTable GetDataFromDatabase1()
         {
 
             string connectionString = "server=sailsinternal.database.windows.net;database=BMTool;Trusted_Connection=true"; // Replace with your actual connection string
@@ -253,7 +246,7 @@ namespace BMtool.Infrastructure.Repository
                     connection.Open();
                     SqlDataReader reader = command.ExecuteReader();
 
-                    DataTable dataTable = new DataTable();
+                   var dataTable = new System.Data.DataTable();
                     dataTable.Load(reader);
 
                     return dataTable;
@@ -262,17 +255,17 @@ namespace BMtool.Infrastructure.Repository
         }
 
 
-        public void ExportToExcel1(DataTable dataTable, string filePath)
+        public void ExportToExcel1(System.Data.DataTable dataTable, string filePath)
         {
             using (SpreadsheetDocument document = SpreadsheetDocument.Create(filePath, SpreadsheetDocumentType.Workbook))
             {
                 WorkbookPart workbookPart = document.AddWorkbookPart();
-                workbookPart.Workbook = new Workbook();
+                workbookPart.Workbook = new DocumentFormat.OpenXml.Spreadsheet.Workbook();
 
                 WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                worksheetPart.Worksheet = new Worksheet(new SheetData());
+                worksheetPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(new SheetData());
 
-                Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
+                DocumentFormat.OpenXml.Spreadsheet.Sheets sheets = workbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
                 Sheet sheet = new Sheet() { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" };
                 sheets.Append(sheet);
 
@@ -312,7 +305,7 @@ namespace BMtool.Infrastructure.Repository
 
         //Today export
 
-        public DataTable GetDataFromDatabase(string query)
+        public System.Data.DataTable GetDataFromDatabase(string query)
         {
             string connectionString = "server=sailsinternal.database.windows.net;database=BMTool;Trusted_Connection=true"; // Replace with your actual connection string
 
@@ -324,7 +317,7 @@ namespace BMtool.Infrastructure.Repository
                     connection.Open();
                     SqlDataReader reader = command.ExecuteReader();
 
-                    DataTable dataTable = new DataTable();
+                    System.Data.DataTable dataTable =   new System.Data.DataTable();
                     dataTable.Load(reader);
 
                     return dataTable;
@@ -338,14 +331,14 @@ namespace BMtool.Infrastructure.Repository
             using (SpreadsheetDocument document = SpreadsheetDocument.Create(filePath, SpreadsheetDocumentType.Workbook))
             {
                 WorkbookPart workbookPart = document.AddWorkbookPart();
-                workbookPart.Workbook = new Workbook();
+                workbookPart.Workbook = new DocumentFormat.OpenXml.Spreadsheet.Workbook();
 
-                foreach (DataTable dataTable in dataSet.Tables)
+                foreach (System.Data.DataTable dataTable in dataSet.Tables)
                 {
                     WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                    worksheetPart.Worksheet = new Worksheet(new SheetData());
+                    worksheetPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(new SheetData());
 
-                    Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
+                    DocumentFormat.OpenXml.Spreadsheet.Sheets sheets = workbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
                     Sheet sheet = new Sheet() { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = (uint)(sheets.Count() + 1), Name = dataTable.TableName };
                     sheets.Append(sheet);
 
@@ -387,14 +380,14 @@ namespace BMtool.Infrastructure.Repository
             using (SpreadsheetDocument document = SpreadsheetDocument.Create(filePath, SpreadsheetDocumentType.Workbook))
             {
                 WorkbookPart workbookPart = document.AddWorkbookPart();
-                workbookPart.Workbook = new Workbook();
+                workbookPart.Workbook = new DocumentFormat.OpenXml.Spreadsheet.Workbook();
 
-                Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
+                DocumentFormat.OpenXml.Spreadsheet.Sheets sheets = workbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
 
-                foreach (DataTable dataTable in dataSet.Tables)
+                foreach (System.Data.DataTable dataTable in dataSet.Tables)
                 {
                     WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                    worksheetPart.Worksheet = new Worksheet(new SheetData());
+                    worksheetPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(new SheetData());
 
                     string sheetName = dataTable.TableName;
 
@@ -470,7 +463,7 @@ namespace BMtool.Infrastructure.Repository
                 DataSet dataSet = new DataSet();
                 foreach (string query in queries)
                 {
-                    DataTable table = GetDataFromDatabase(query);
+                    System.Data.DataTable table = GetDataFromDatabase(query);
                     dataSet.Tables.Add(table);
                 }
 
@@ -493,23 +486,55 @@ namespace BMtool.Infrastructure.Repository
             {
                 Dictionary<string, string> tableQueries = new Dictionary<string, string>
         {
-            {"Users", "SELECT * FROM Users"},
-            {"Department", "SELECT * FROM Department"},
-            {"Designation", "SELECT * FROM Designation"},
-            {"EmployeeSkillSet", "SELECT * FROM EmployeeSkillSet"},
-            {"EventAttendees", "SELECT * FROM EventAttendees"},
-            {"Events", "SELECT * FROM Events"},
-            {"Learning", "SELECT * FROM Learning"},
-            {"Notes", "SELECT * FROM Notes"},
-            {"PasswordResetToken", "SELECT * FROM PasswordResetToken"},
-            {"Projects", "SELECT * FROM Projects"},
-            {"ProjectTechEntries", "SELECT * FROM ProjectTechEntries"},
-            {"Roles", "SELECT * FROM Roles"},
-            {"Tasks", "SELECT * FROM Tasks"},
-            {"Technologies", "SELECT * FROM Technologies"},
-            {"Upskilling", "SELECT * FROM Upskilling"},
-            {"UserProjectEntries", "SELECT * FROM UserProjectEntries"},
-            {"UserRoles", "SELECT * FROM UserRoles"}
+            //{"Users", @"select      
+            //                    u.EmployeeNumber,concat( fname,lname ) as EmployeeName,u.officeEmail as Email,u.EmployeeType,
+			         //            u.Experience, d.name as Designation,u.IsInProject,u.IsUpskilling,u.createdon as JoinedOn,
+			         //           u.location,r.roleName,p.Name as ManagerName,p.ClientName,p.StartDate as ProjectStartdate,p.EndDate as ProjectEndDate,u.IsActive,e.status,
+			         //           ess.IsCurrentlyWorking
+
+            //        from users u
+		          //              	Left join projects p
+		          //              	on u.projectId = p.ID
+		          //              	Left join Department d
+			         //               on d.id = u.deptid
+			         //               Left join UserRoles uR
+			         //               on u.id = uR.userId
+			         //               Left join Roles r
+			         //               on uR.RoleId = r.Id
+			         //               Left join Learning l
+			         //               on u.Id =l.UserId 
+			         //               Left Join [Events] e
+			         //               on u.id = e.UserId
+			         //               Left Join EmployeeSkillSet ESS
+			         //               on u.Id = ESS.UserId
+			         //               Left Join UserProjectEntries UPE
+		          //              	on u.id = UPE.UserId
+			         //               Full Join Technologies T
+			         //               on T.ID = ESS.UserID
+			         //               Full join Tasks ta
+			         //               on e.UserId = ta.SenderId
+		          //              	Left Join EventAttendees EA
+		          //              	on u.Id = EA.HostId
+            //                                                            " },
+                    {"Export", "Exec GetEmployeeData "},
+                                  
+
+        //    {"Department", "SELECT * FROM Department"},
+        //    {"Designation", "SELECT * FROM Designation"},
+        //    {"EmployeeSkillSet", "SELECT * FROM EmployeeSkillSet"},
+        //    {"EventAttendees", "SELECT * FROM EventAttendees"},
+        //    {"Events", "SELECT * FROM Events"},
+        //    {"Learning", "SELECT * FROM Learning"},
+        //    {"Notes", "SELECT * FROM Notes"},
+        //    {"PasswordResetToken", "SELECT * FROM PasswordResetToken"},
+        //    {"Projects", "SELECT * FROM Projects"},
+        //    {"ProjectTechEntries", "SELECT * FROM ProjectTechEntries"},
+        //    {"Roles", "SELECT * FROM Roles"},
+        //    {"Tasks", "SELECT * FROM Tasks"},
+        //    {"Technologies", "SELECT * FROM Technologies"},
+        //    {"Upskilling", "SELECT * FROM Upskilling"},
+        //    {"UserProjectEntries", "SELECT * FROM UserProjectEntries"},
+        //    {"UserRoles", "SELECT * FROM UserRoles"}
         };
 
                 DataSet dataSet = new DataSet();
@@ -518,7 +543,7 @@ namespace BMtool.Infrastructure.Repository
                     string tableName = tableQuery.Key;
                     string query = tableQuery.Value;
 
-                    DataTable table = GetDataFromDatabase(query);
+                    System.Data.DataTable table = GetDataFromDatabase(query);
                     table.TableName = tableName;
                     dataSet.Tables.Add(table);
                 }
@@ -539,165 +564,61 @@ namespace BMtool.Infrastructure.Repository
 
 
 
-        //public void ImportExcelDataToSQL(string excelFilePath, string sqlConnectionString)
+
+
+
+        //public void ImportOledb()
         //{
-        //    Excel.Application excelApp = new Excel.Application();
-        //    Excel.Workbook workbook = excelApp.Workbooks.Open(excelFilePath);
-        //    Excel.Worksheet worksheet = (Excel.Worksheet)workbook.Sheets[1]; // Assuming the data is on the first sheet
+        //    //string excelFilePath = "C:\\Ganesh232";
+        //    ExcelPackage excelFilePath = new ExcelPackage(new FileInfo("C:\\Ganesh232\\CSv_20230525_115352.csv"));
+        //    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        //    string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={excelFilePath};Extended Properties=\"Excel 12.0;HDR=YES;\"";
 
-        //    // Get the range of used cells in the worksheet
-        //    Excel.Range usedRange = worksheet.UsedRange;
-
-        //    // Get the number of rows and columns in the used range
-        //    int rowCount = usedRange.Rows.Count;
-        //    int columnCount = usedRange.Columns.Count;
-
-        //    // Open a connection to the SQL Server database
-        //    using (SqlConnection connection = new SqlConnection(sqlConnectionString))
+        //    using (OleDbConnection connection = new OleDbConnection(connectionString))
         //    {
         //        connection.Open();
 
-        //        // Iterate over the rows and columns in the Excel file
-        //        for (int row = 1; row <= rowCount; row++)
+        //        // Get the list of sheets in the Excel file
+        //        System.Data.DataTable schemaTable = connection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
+
+        //        if (schemaTable != null)
         //        {
-        //            // Assuming the data starts from the first row
-
-        //            // Create a parameterized SQL INSERT statement
-        //            string insertQuery = "INSERT INTO TableName (Column1, Column2, Column3) VALUES (@Column1, @Column2, @Column3)";
-
-        //            // Create a SQL command object
-        //            using (SqlCommand command = new SqlCommand(insertQuery, connection))
+        //            foreach (DataRow row in schemaTable.Rows)
         //            {
-        //                // Set the parameter values from the Excel file
-        //                command.Parameters.AddWithValue("@Column1", (worksheet.Cells[row, 1] as Excel.Range).Value2);
-        //                command.Parameters.AddWithValue("@Column2", (worksheet.Cells[row, 2] as Excel.Range).Value2);
-        //                command.Parameters.AddWithValue("@Column3", (worksheet.Cells[row, 3] as Excel.Range).Value2);
+        //                string sheetName = row["TABLE_NAME"].ToString();
 
-        //                // Execute the SQL command
-        //                command.ExecuteNonQuery();
+        //                // Read the data from each sheet
+        //                string query = $"SELECT * FROM [{sheetName}]";
+        //                OleDbDataAdapter dataAdapter = new OleDbDataAdapter(query, connection);
+        //                DataTable dataTable = new DataTable();
+        //                dataAdapter.Fill(dataTable);
+
+        //                // Store the data in the SQL database
+        //                //  string sqlConnectionString = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
+        //                string sqlConnectionString = "Data Source=(localdb)\\mssqllocaldb;Initial Catalog=BMtool_Demo;Integrated Security=True;";
+
+        //                using (SqlConnection sqlConnection = new SqlConnection(sqlConnectionString))
+        //                {
+        //                    sqlConnection.Open();
+
+        //                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection))
+        //                    {
+        //                        bulkCopy.DestinationTableName = "users19";
+        //                        bulkCopy.WriteToServer(dataTable);
+        //                    }
+        //                }
         //            }
         //        }
-
-        //        connection.Close();
         //    }
 
-        //    // Clean up Excel objects
-        //    workbook.Close();
-        //    excelApp.Quit();
-        //    System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
-        //    System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
-        //    System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
-        //    worksheet = null;
-        //    workbook = null;
-        //    excelApp = null;
-        //    GC.Collect();
-        //}
-
-        //public void Import(string excelFilePath)
-        //{
-        //    try
-        //    {
-        //        excelFilePath = @"C:\Users\SAILS-DM292\Source\Repos\LocalBMtool\BMtool.Api\ExportedFile";
-        //        //string excelFilePath = @"C:\Users\SAILS-DM292\Source\Repos\LocalBMtool\BMtool.Api\bin\Debug\net7.0";
-
-
-
-        //        string sqlConnectionString = @"server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
-
-        //        ImportExcelDataToSQL(excelFilePath, sqlConnectionString);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw;
-        //    }
-
-
-        //}
-
-        //public static void Main()
-        //{
-
-        //  OpenFileDialog openFileDialog = new OpenFileDialog();
-
-        //    // Set the initial directory (optional)
-        //    openFileDialog.InitialDirectory = @"C:\";
-
-        //    // Set the title of the dialog (optional)
-        //    openFileDialog.Title = "Select a File";
-
-        //    // Set the filter for the types of files to be displayed
-        //    openFileDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
-
-        //    // Set whether multiple files can be selected (optional)
-        //    openFileDialog.Multiselect = false;
-
-        //    // Show the dialog and check if the user clicked the "OK" button
-        //    if (openFileDialog.ShowDialog() == DialogResult.OK)
-        //    {
-        //        // Get the selected file path
-        //        string selectedFilePath = openFileDialog.FileName;
-
-        //        // Do something with the selected file
-        //        Console.WriteLine("Selected File: " + selectedFilePath);
-        //    }
+        //    Console.WriteLine("Data imported successfully!");
         //}
 
 
 
-
-
-        public void ImportOledb()
+        public void Importwasrte()
         {
-            //string excelFilePath = "C:\\Ganesh232";
-            ExcelPackage excelFilePath = new ExcelPackage(new FileInfo("C:\\Ganesh232\\CSv_20230525_115352.csv"));
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={excelFilePath};Extended Properties=\"Excel 12.0;HDR=YES;\"";
-
-            using (OleDbConnection connection = new OleDbConnection(connectionString))
-            {
-                connection.Open();
-
-                // Get the list of sheets in the Excel file
-                DataTable schemaTable = connection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
-
-                if (schemaTable != null)
-                {
-                    foreach (DataRow row in schemaTable.Rows)
-                    {
-                        string sheetName = row["TABLE_NAME"].ToString();
-
-                        // Read the data from each sheet
-                        string query = $"SELECT * FROM [{sheetName}]";
-                        OleDbDataAdapter dataAdapter = new OleDbDataAdapter(query, connection);
-                        DataTable dataTable = new DataTable();
-                        dataAdapter.Fill(dataTable);
-
-                        // Store the data in the SQL database
-                        //  string sqlConnectionString = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
-                        string sqlConnectionString = "Data Source=(localdb)\\mssqllocaldb;Initial Catalog=BMtool_Demo;Integrated Security=True;";
-
-                        using (SqlConnection sqlConnection = new SqlConnection(sqlConnectionString))
-                        {
-                            sqlConnection.Open();
-
-                            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection))
-                            {
-                                bulkCopy.DestinationTableName = "users19";
-                                bulkCopy.WriteToServer(dataTable);
-                            }
-                        }
-                    }
-                }
-            }
-
-            Console.WriteLine("Data imported successfully!");
-        }
-
-
-
-        public void Importo()
-        {
-            string excelFilePath = "C:\\Ganesh232\\CSv_20230525_115352.csv";
+            string excelFilePath = "C:\\Ganesh232\\Today_20230531_121231.xlsx";
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -708,7 +629,7 @@ namespace BMtool.Infrastructure.Repository
                 int rows = worksheet.Dimension.Rows;
                 int columns = worksheet.Dimension.Columns;
 
-                DataTable dataTable = new DataTable();
+                System.Data.DataTable dataTable = new System.Data.DataTable();
 
                 // Read column names from the first row and add them as columns to the DataTable
                 for (int col = 1; col <= columns; col++)
@@ -737,7 +658,7 @@ namespace BMtool.Infrastructure.Repository
 
                     using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection))
                     {
-                        bulkCopy.DestinationTableName = "users19";
+                        bulkCopy.DestinationTableName = "users";
                         bulkCopy.WriteToServer(dataTable);
                     }
                 }
@@ -749,7 +670,7 @@ namespace BMtool.Infrastructure.Repository
         //Use this
         public void Import222()
         {
-            string excelFilePath = "C:\\Ganesh232\\Import.xlsx";
+            string excelFilePath = "C:\\Ganesh232\\Today_20230531_121231.xlsx";
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -760,7 +681,7 @@ namespace BMtool.Infrastructure.Repository
                 int rows = worksheet.Dimension.Rows;
                 int columns = worksheet.Dimension.Columns;
 
-                DataTable dataTable = new DataTable();
+                System.Data.DataTable dataTable = new System.Data.DataTable();
 
                 // Read column names from the first row and add them as columns to the DataTable
                 for (int col = 1; col <= columns; col++)
@@ -887,7 +808,7 @@ namespace BMtool.Infrastructure.Repository
                 int rows = worksheet.Dimension.Rows;
                 int columns = worksheet.Dimension.Columns;
 
-                DataTable dataTable = new DataTable();
+                System.Data.DataTable dataTable = new System.Data.DataTable();
 
                 // Read column names from the first row and add them as columns to the DataTable
                 for (int col = 1; col <= columns; col++)
@@ -991,7 +912,7 @@ namespace BMtool.Infrastructure.Repository
                 int rows = worksheet.Dimension.Rows;
                 int columns = worksheet.Dimension.Columns;
 
-                DataTable dataTable = new DataTable();
+                System.Data.DataTable dataTable = new System.Data.DataTable();
 
                 // Read column names from the first row and add them as columns to the DataTable
                 for (int col = 1; col <= columns; col++)
@@ -1071,122 +992,122 @@ namespace BMtool.Infrastructure.Repository
         }
 
 
-        public void Import1()
-        {
-            using (ExcelPackage package = new ExcelPackage(new FileInfo("C:\\Ganesh232\\CSv_20230525_115352.csv")))
-            {
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-                string connectionString = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
+        //public void Import1()
+        //{
+        //    using (ExcelPackage package = new ExcelPackage(new FileInfo("C:\\Ganesh232\\CSv_20230525_115352.csv")))
+        //    {
+        //        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        //        string connectionString = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
 
-                int worksheetCount = package.Workbook.Worksheets.Count;
+        //        int worksheetCount = package.Workbook.Worksheets.Count;
 
-                if (worksheetCount > 0)
-                {
-                    int worksheetIndex = 0; // Use the appropriate index for the desired worksheet
+        //        if (worksheetCount > 0)
+        //        {
+        //            int worksheetIndex = 0; // Use the appropriate index for the desired worksheet
 
-                    if (worksheetIndex >= 0 && worksheetIndex < worksheetCount)
-                    {
-
-
-
-                        ExcelWorksheet worksheet = package.Workbook.Worksheets[worksheetIndex]; // Assuming the data is in the first worksheet
-
-                        int rows = worksheet.Dimension.Rows;
-                        int columns = worksheet.Dimension.Columns;
-
-                        // Iterate through each row and column to retrieve the data
-                        for (int row = 1; row <= rows; row++)
-                        {
-                            for (int col = 1; col <= columns; col++)
-                            {
-                                string cellValue = worksheet.Cells[row, col].Value?.ToString();
-                                // Process the cell value and insert it into the database
-                                // You can use the SqlConnection and SqlCommand classes to insert data into the database
-
-                                string query = @"INSERT INTO Users19  ([EmployeeNumber] ,[FName] ,[LName]   ,[Gender] ,[DOB]
-                                                            ,[Phone] ,[OfficeEmail] ,[Mobile]  ,[PersonalEmail]  ,[EmployeeType]   ,[Experience]  ,[DesignationId]
-                                                             ,[IsInProject],[IsUpskilling] ,[IsWorkingOnInternalTool] ,[ProjectId],[NotesId],[Password]
-                                                             ,[IsFirstLogin],[DeptId],[CreatedBy],[CreatedOn],[ModifiedBy],[ModifiedOn],[JoinedOn]
-                                                             ,[Location],[IsActive]) 
-                                                    VALUES (@EmployeeNumber, @FName, @LName, @Gender, @DOB, @Phone, @OfficeEmail, @Mobile, @PersonalEmail,
-                                                            @EmployeeType, @Experience, @DesignationId, @IsInProject, @IsUpskilling, @IsWorkingOnInternalTool, 
-                                                            @ProjectId, @NotesId, @Password, @IsFirstLogin, @DeptId, @CreatedBy, @CreatedOn, @ModifiedBy, @ModifiedOn,
-                                                            @JoinedOn, @Location, @IsActive);";
-
-                                //  SqlCommand command = new SqlCommand(query, connection);
-                                //    command.Parameters.AddWithValue("@value", cellValue);
-
-                                // Create a list of data sets to import
-                                using (SqlConnection connection = new SqlConnection(connectionString))
-                                {
-                                    connection.Open();
-
-                                    List<ImportModelclass> dataSets = new List<ImportModelclass>
-                                    {
-                                        new ImportModelclass { EmployeeNumber = "405", FName = "John",
-                                            LName = "Doe", Gender = "M", DOB = new DateTime(1990, 1, 1), Phone = "1234567890",
-                                            OfficeEmail = "john.doe@company.com", Mobile = "9876543210", PersonalEmail = "johndoe@gmail.com",
-                                            EmployeeType = 1, Experience = "32", DesignationId = 1, IsInProject = 1, IsUpskilling = 0,
-                                            IsWorkingOnInternalTool = 0, ProjectId = 1, NotesId = 1, Password = "abcd123", IsFirstLogin = '1',
-                                            DeptId = 1, CreatedBy = 18, CreatedOn = DateTime.Now, ModifiedBy = 18, ModifiedOn = DateTime.Now,
-                                            JoinedOn = new DateTime(2022, 1, 1), Location = "New York", IsActive = 1},
+        //            if (worksheetIndex >= 0 && worksheetIndex < worksheetCount)
+        //            {
 
 
-                                      // Add more data sets as needed
-                                    };
 
-                                    foreach (ImportModelclass data in dataSets)
-                                    {
-                                        SqlCommand command = new SqlCommand(query, connection);
+        //                ExcelWorksheet worksheet = package.Workbook.Worksheets[worksheetIndex]; // Assuming the data is in the first worksheet
 
-                                        // Assign parameter values for each data set
-                                        command.Parameters.AddWithValue("@EmployeeNumber", data.EmployeeNumber);
-                                        command.Parameters.AddWithValue("@FName", data.FName);
-                                        command.Parameters.AddWithValue("@LName", data.LName);
-                                        command.Parameters.AddWithValue("@Gender", data.Gender);
-                                        command.Parameters.AddWithValue("@DOB", data.DOB);
-                                        command.Parameters.AddWithValue("@Phone", data.Phone);
-                                        command.Parameters.AddWithValue("@OfficeEmail", data.OfficeEmail);
-                                        command.Parameters.AddWithValue("@Mobile", data.Mobile);
-                                        command.Parameters.AddWithValue("@PersonalEmail", data.PersonalEmail);
-                                        command.Parameters.AddWithValue("@EmployeeType", data.EmployeeType);
-                                        command.Parameters.AddWithValue("@Experience", data.Experience);
-                                        command.Parameters.AddWithValue("@DesignationId", data.DesignationId);
-                                        command.Parameters.AddWithValue("@IsInProject", data.IsInProject);
-                                        command.Parameters.AddWithValue("@IsUpskilling", data.IsUpskilling);
-                                        command.Parameters.AddWithValue("@IsWorkingOnInternalTool", data.IsWorkingOnInternalTool);
-                                        command.Parameters.AddWithValue("@ProjectId", data.ProjectId);
-                                        command.Parameters.AddWithValue("@NotesId", data.NotesId);
-                                        command.Parameters.AddWithValue("@Password", data.Password);
-                                        command.Parameters.AddWithValue("@IsFirstLogin", data.IsFirstLogin);
-                                        command.Parameters.AddWithValue("@DeptId", data.DeptId);
-                                        command.Parameters.AddWithValue("@CreatedBy", data.CreatedBy);
-                                        command.Parameters.AddWithValue("@CreatedOn", data.CreatedOn);
-                                        command.Parameters.AddWithValue("@ModifiedBy", data.ModifiedBy);
-                                        command.Parameters.AddWithValue("@ModifiedOn", data.ModifiedOn);
-                                        command.Parameters.AddWithValue("@JoinedOn", data.JoinedOn);
-                                        command.Parameters.AddWithValue("@Location", data.Location);
-                                        command.Parameters.AddWithValue("@IsActive", data.IsActive);
+        //                int rows = worksheet.Dimension.Rows;
+        //                int columns = worksheet.Dimension.Columns;
 
-                                        int rowsAffected = command.ExecuteNonQuery();
-                                        Console.WriteLine($"{rowsAffected} row(s) inserted for data set.");
-                                    }
+        //                // Iterate through each row and column to retrieve the data
+        //                for (int row = 1; row <= rows; row++)
+        //                {
+        //                    for (int col = 1; col <= columns; col++)
+        //                    {
+        //                        string cellValue = worksheet.Cells[row, col].Value?.ToString();
+        //                        // Process the cell value and insert it into the database
+        //                        // You can use the SqlConnection and SqlCommand classes to insert data into the database
+
+        //                        string query = @"INSERT INTO Users19  ([EmployeeNumber] ,[FName] ,[LName]   ,[Gender] ,[DOB]
+        //                                                    ,[Phone] ,[OfficeEmail] ,[Mobile]  ,[PersonalEmail]  ,[EmployeeType]   ,[Experience]  ,[DesignationId]
+        //                                                     ,[IsInProject],[IsUpskilling] ,[IsWorkingOnInternalTool] ,[ProjectId],[NotesId],[Password]
+        //                                                     ,[IsFirstLogin],[DeptId],[CreatedBy],[CreatedOn],[ModifiedBy],[ModifiedOn],[JoinedOn]
+        //                                                     ,[Location],[IsActive]) 
+        //                                            VALUES (@EmployeeNumber, @FName, @LName, @Gender, @DOB, @Phone, @OfficeEmail, @Mobile, @PersonalEmail,
+        //                                                    @EmployeeType, @Experience, @DesignationId, @IsInProject, @IsUpskilling, @IsWorkingOnInternalTool, 
+        //                                                    @ProjectId, @NotesId, @Password, @IsFirstLogin, @DeptId, @CreatedBy, @CreatedOn, @ModifiedBy, @ModifiedOn,
+        //                                                    @JoinedOn, @Location, @IsActive);";
+
+        //                        //  SqlCommand command = new SqlCommand(query, connection);
+        //                        //    command.Parameters.AddWithValue("@value", cellValue);
+
+        //                        // Create a list of data sets to import
+        //                        using (SqlConnection connection = new SqlConnection(connectionString))
+        //                        {
+        //                            connection.Open();
+
+        //                            List<ImportModelclass> dataSets = new List<ImportModelclass>
+        //                            {
+        //                                new ImportModelclass { EmployeeNumber = "405", FName = "John",
+        //                                    LName = "Doe", Gender = "M", DOB = new DateTime(1990, 1, 1), Phone = "1234567890",
+        //                                    OfficeEmail = "john.doe@company.com", Mobile = "9876543210", PersonalEmail = "johndoe@gmail.com",
+        //                                    EmployeeType = 1, Experience = "32", DesignationId = 1, IsInProject = 1, IsUpskilling = 0,
+        //                                    IsWorkingOnInternalTool = 0, ProjectId = 1, NotesId = 1, Password = "abcd123", IsFirstLogin = '1',
+        //                                    DeptId = 1, CreatedBy = 18, CreatedOn = DateTime.Now, ModifiedBy = 18, ModifiedOn = DateTime.Now,
+        //                                    JoinedOn = new DateTime(2022, 1, 1), Location = "New York", IsActive = 1},
 
 
-                                    connection.Close();
-                                    //command.ExecuteNonQuery();
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Invalid worksheet index");
-                    }
+        //                              // Add more data sets as needed
+        //                            };
 
-                }
-            }
-        }
+        //                            foreach (ImportModelclass data in dataSets)
+        //                            {
+        //                                SqlCommand command = new SqlCommand(query, connection);
+
+        //                                // Assign parameter values for each data set
+        //                                command.Parameters.AddWithValue("@EmployeeNumber", data.EmployeeNumber);
+        //                                command.Parameters.AddWithValue("@FName", data.FName);
+        //                                command.Parameters.AddWithValue("@LName", data.LName);
+        //                                command.Parameters.AddWithValue("@Gender", data.Gender);
+        //                                command.Parameters.AddWithValue("@DOB", data.DOB);
+        //                                command.Parameters.AddWithValue("@Phone", data.Phone);
+        //                                command.Parameters.AddWithValue("@OfficeEmail", data.OfficeEmail);
+        //                                command.Parameters.AddWithValue("@Mobile", data.Mobile);
+        //                                command.Parameters.AddWithValue("@PersonalEmail", data.PersonalEmail);
+        //                                command.Parameters.AddWithValue("@EmployeeType", data.EmployeeType);
+        //                                command.Parameters.AddWithValue("@Experience", data.Experience);
+        //                                command.Parameters.AddWithValue("@DesignationId", data.DesignationId);
+        //                                command.Parameters.AddWithValue("@IsInProject", data.IsInProject);
+        //                                command.Parameters.AddWithValue("@IsUpskilling", data.IsUpskilling);
+        //                                command.Parameters.AddWithValue("@IsWorkingOnInternalTool", data.IsWorkingOnInternalTool);
+        //                                command.Parameters.AddWithValue("@ProjectId", data.ProjectId);
+        //                                command.Parameters.AddWithValue("@NotesId", data.NotesId);
+        //                              //  command.Parameters.AddWithValue("@Password", data.Password);
+        //                                command.Parameters.AddWithValue("@IsFirstLogin", data.IsFirstLogin);
+        //                                command.Parameters.AddWithValue("@DeptId", data.DeptId);
+        //                                command.Parameters.AddWithValue("@CreatedBy", data.CreatedBy);
+        //                                command.Parameters.AddWithValue("@CreatedOn", data.CreatedOn);
+        //                                command.Parameters.AddWithValue("@ModifiedBy", data.ModifiedBy);
+        //                                command.Parameters.AddWithValue("@ModifiedOn", data.ModifiedOn);
+        //                                command.Parameters.AddWithValue("@JoinedOn", data.JoinedOn);
+        //                                command.Parameters.AddWithValue("@Location", data.Location);
+        //                                command.Parameters.AddWithValue("@IsActive", data.IsActive);
+
+        //                                int rowsAffected = command.ExecuteNonQuery();
+        //                                Console.WriteLine($"{rowsAffected} row(s) inserted for data set.");
+        //                            }
+
+
+        //                            connection.Close();
+        //                            //command.ExecuteNonQuery();
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                Console.WriteLine("Invalid worksheet index");
+        //            }
+
+        //        }
+        //    }
+        //}
 
 
         //Today
@@ -1209,7 +1130,7 @@ namespace BMtool.Infrastructure.Repository
 
                         int rows = worksheet.Dimension.Rows;
                         int columns = worksheet.Dimension.Columns;
-                        DataTable dataTable = new DataTable();
+                        System.Data.DataTable dataTable = new System.Data.DataTable();
 
                         // Retrieve the column names from the first row
                         var columnNames = new List<string>();
@@ -1419,7 +1340,7 @@ namespace BMtool.Infrastructure.Repository
                 int rows = worksheet.Dimension.Rows;
                 int columns = worksheet.Dimension.Columns;
 
-                DataTable dataTable = new DataTable();
+                System.Data.DataTable dataTable = new System.Data.DataTable();
 
                 // Read column names from the first row and add them as columns to the DataTable
                 for (int col = 1; col <= columns; col++)
@@ -1469,11 +1390,11 @@ namespace BMtool.Infrastructure.Repository
         }
 
 
-        //Bhavya
-       public void Import()
+        //Sita
+        public void Imports()
         {
 
-          
+
 
             // Establish the connection string to the database
             var connectionString = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
@@ -1491,16 +1412,16 @@ namespace BMtool.Infrastructure.Repository
                     var worksheet = package.Workbook.Worksheets[0];
 
                     // Create a DataTable to hold the data
-                    var table = new DataTable();
+                    var table = new System.Data.DataTable();
 
                     // Define the columns in the DataTable
-                    table.Columns.Add("Id", typeof(int)); 
+                    //   table.Columns.Add("Id", typeof(int));
                     table.Columns.Add("EmployeeNumber", typeof(string));
                     table.Columns.Add("FName", typeof(string));
-                    table.Columns.Add("LName", typeof(string));                    
+                    table.Columns.Add("LName", typeof(string));
                     table.Columns.Add("Gender", typeof(string));
                     table.Columns.Add("Phone", typeof(string));
-                    table.Columns.Add("DOB", typeof(DateTime));                    
+                    table.Columns.Add("DOB", typeof(DateTime));
                     table.Columns.Add("OfficeEmail", typeof(string));
                     table.Columns.Add("Mobile", typeof(string));
                     table.Columns.Add("PersonalEmail", typeof(string));
@@ -1514,27 +1435,30 @@ namespace BMtool.Infrastructure.Repository
                     table.Columns.Add("NotesId", typeof(int));
                     table.Columns.Add("IsFirstLogin", typeof(bool));
                     table.Columns.Add("DeptId", typeof(byte));
-                    table.Columns.Add("CreatedBy", typeof(int));
+                    table.Columns.Add("CreatedBy", typeof(DateTime));
                     table.Columns.Add("CreatedOn", typeof(DateTime));
                     table.Columns.Add("ModifiedBy", typeof(int));
                     table.Columns.Add("ModifiedOn", typeof(DateTime));
                     table.Columns.Add("JoinedOn", typeof(DateTime));
                     table.Columns.Add("Location", typeof(string));
                     table.Columns.Add("IsActive", typeof(bool));
-                 //   table.Columns.Add("Password", typeof(byte[]));
+                    //   table.Columns.Add("Password", typeof(byte[]));
+
+                    table.Rows.Add();
 
                     // Iterate over the rows in the worksheet
-                    for (int row = 2; row <= worksheet.Dimension.End.Row; row++) // Assuming the first row is a header
+                    for (int row = 2; row <= worksheet.Dimension.End.Row - 1; row++) // Assuming the first row is a header
                     {
                         // Read the data from the Excel file
-                        var id = worksheet.Cells[row, 1].GetValue<int>();
+                        //       var id = worksheet.Cells[row, 1].GetValue<int>();
                         var employeeNumber = worksheet.Cells[row, 2].GetValue<string>();
                         var fName = worksheet.Cells[row, 3].GetValue<string>();
                         var lName = worksheet.Cells[row, 4].GetValue<string>();
                         var gender = worksheet.Cells[row, 5].GetValue<string>();
-                        var phone = worksheet.Cells[row, 7].GetValue<string>();
                         var dob = worksheet.Cells[row, 6].GetValue<DateTime>();
-                        
+
+                        var phone = worksheet.Cells[row, 7].GetValue<string>();
+
                         var officeEmail = worksheet.Cells[row, 8].GetValue<string>();
                         var mobile = worksheet.Cells[row, 9].GetValue<string>();
                         var personalEmail = worksheet.Cells[row, 10].GetValue<string>();
@@ -1548,18 +1472,18 @@ namespace BMtool.Infrastructure.Repository
                         var notesId = worksheet.Cells[row, 18].GetValue<int>();
                         var isFirstLogin = worksheet.Cells[row, 19].GetValue<bool>();
                         var deptId = worksheet.Cells[row, 20].GetValue<byte>();
-                        var createdBy = worksheet.Cells[row,21].GetValue<int>();
+                        var createdBy = worksheet.Cells[row, 21].GetValue<DateTime>();
                         var createdOn = worksheet.Cells[row, 22].GetValue<DateTime>();
                         var modifiedBy = worksheet.Cells[row, 23].GetValue<int>();
                         var modifiedOn = worksheet.Cells[row, 24].GetValue<DateTime>();
                         var joinedOn = worksheet.Cells[row, 25].GetValue<DateTime>();
                         var location = worksheet.Cells[row, 26].GetValue<string>();
                         var isActiveColumn = worksheet.Cells[row, 27].GetValue<bool>();
-                     //   var password = worksheet.Cells[row, 28].GetValue<byte[]>();
+                        //   var password = worksheet.Cells[row, 28].GetValue<byte[]>();
 
                         // Create a new row in the DataTable
                         var dataRow = table.NewRow();
-                        dataRow["Id"] = id;
+                        //    dataRow["Id"] = id;
                         dataRow["EmployeeNumber"] = employeeNumber;
                         dataRow["FName"] = fName;
                         dataRow["LName"] = lName;
@@ -1585,8 +1509,12 @@ namespace BMtool.Infrastructure.Repository
                         dataRow["ModifiedOn"] = modifiedOn;
                         dataRow["JoinedOn"] = joinedOn;
                         dataRow["Location"] = location;
-                       dataRow["IsActive"] = isActiveColumn;
-                    //    dataRow["Password"] = password;
+                        dataRow["IsActive"] = isActiveColumn;
+                        //    dataRow["Password"] = password;
+                        Console.WriteLine("inside loop");
+                        Console.WriteLine(dataRow);
+                        // Trace.WriteLine(dataRow);
+
                         table.Rows.Add(dataRow);
                     }
 
@@ -1611,5 +1539,334 @@ namespace BMtool.Infrastructure.Repository
             Console.WriteLine(oleAuto);
         }
 
+
+        public void ImportExcel(string filePath, string connectionString)
+        {
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+
+            string extension = Path.GetExtension(filePath);
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                IExcelDataReader reader;
+                if (extension == ".xlsx")
+                {
+                    reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+                }
+                else if (extension == ".csv")
+                {
+                    reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
+                    {
+                        FallbackEncoding = Encoding.GetEncoding("utf-8")
+                    });
+                }
+                else
+                {
+                    Console.WriteLine("Invalid file format. Only .xlsx and .csv files are supported.");
+                    return;
+                }
+
+                var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+                {
+                    ConfigureDataTable = (_) => new ExcelDataTableConfiguration
+                    {
+                        UseHeaderRow = true
+                    }
+                });
+
+                var dataTable = dataSet.Tables[0];
+
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (var bulkCopy = new SqlBulkCopy(connection))
+                    {
+                        bulkCopy.DestinationTableName = "users";
+                        bulkCopy.WriteToServer(dataTable);
+                    }
+                    connection.Close();
+                }
+            }
+
+            Console.WriteLine("Import completed successfully.");
+        }
+
+
+        public void ImportB32()
+        {
+            string filePath = "C:\\Ganesh232\\Import.xlsx";
+            string connectionString = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
+
+            ImportExcel(filePath, connectionString);
+        }
+
+
+        //Bhavya
+
+        public void Import()
+        {
+
+
+            // Establish the connection string to the database
+            var connectionString = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            // Create a connection to the database
+            using (var connection = new SqlConnection(connectionString))
+            {
+                // Open the connection
+                connection.Open();
+
+
+
+                // Load the Excel file
+                using (var package = new ExcelPackage(new FileInfo("C:\\Ganesh232\\Import.xlsx")))
+                {
+                    // Assuming the data is in the first worksheet of the Excel file
+                    var worksheet = package.Workbook.Worksheets[0];
+
+
+
+                    // Create a DataTable to hold the data
+                    var table = new System.Data.DataTable();
+
+
+
+                    // Define the columns in the DataTable
+                    //     table.Columns.Add("Id", typeof(int));
+                    table.Columns.Add("EmployeeNumber", typeof(string));
+                    table.Columns.Add("FName", typeof(string));
+                    table.Columns.Add("LName", typeof(string));
+                    table.Columns.Add("Gender", typeof(string));
+                    table.Columns.Add("Phone", typeof(string));
+                    table.Columns.Add("DOB", typeof(DateTime));
+                    table.Columns.Add("OfficeEmail", typeof(string));
+                    table.Columns.Add("Mobile", typeof(string));
+                    table.Columns.Add("PersonalEmail", typeof(string));
+                    table.Columns.Add("EmployeeType", typeof(bool));
+                    table.Columns.Add("Experience", typeof(byte));
+                    table.Columns.Add("DesignationId", typeof(byte));
+                    table.Columns.Add("IsInProject", typeof(bool));
+                    table.Columns.Add("IsUpskilling", typeof(bool));
+                    table.Columns.Add("IsWorkingOnInternalTool", typeof(bool));
+                    table.Columns.Add("ProjectId", typeof(byte));
+                    table.Columns.Add("NotesId", typeof(int));
+                    table.Columns.Add("IsFirstLogin", typeof(bool));
+                    table.Columns.Add("DeptId", typeof(byte));
+                    table.Columns.Add("CreatedBy", typeof(int));
+                    table.Columns.Add("CreatedOn", typeof(DateTime));
+                    table.Columns.Add("ModifiedBy", typeof(int));
+                    table.Columns.Add("ModifiedOn", typeof(DateTime));
+                    table.Columns.Add("JoinedOn", typeof(DateTime));
+                    table.Columns.Add("Location", typeof(string));
+                    table.Columns.Add("IsActive", typeof(bool));
+                    //   table.Columns.Add("Password", typeof(byte[]));
+
+
+
+                    // Iterate over the rows in the worksheet
+                    for (int row = 2; row <= worksheet.Dimension.End.Row; row++) // Assuming the first row is a header
+                    {
+                        // Read the data from the Excel file
+                     //   var id = Convert.ToInt32(worksheet.Cells[row, 1].Value);
+                        var employeeNumber = worksheet.Cells[row, 2].GetValue<string>();
+                        var fName = worksheet.Cells[row, 3].GetValue<string>();
+                        var lName = worksheet.Cells[row, 4].GetValue<string>();
+                        var gender = worksheet.Cells[row, 5].GetValue<string>();
+                        var dob = worksheet.Cells[row, 6].GetValue<DateTime>(); ;
+                        var phone = worksheet.Cells[row, 7].GetValue<string>();
+                        var officeEmail = worksheet.Cells[row, 8].GetValue<string>();
+                        var mobile = worksheet.Cells[row, 9].GetValue<string>();
+                        var personalEmail = worksheet.Cells[row, 10].GetValue<string>();
+                        var employeeType = worksheet.Cells[row, 11].GetValue<bool>();
+                        var experience = worksheet.Cells[row, 12].GetValue<byte>();
+                        var designationId = worksheet.Cells[row, 13].GetValue<byte>();
+                        var isInProject = worksheet.Cells[row, 14].GetValue<bool>();
+                        var isUpskilling = worksheet.Cells[row, 15].GetValue<bool>();
+                        var isWorkingOnInternalTool = worksheet.Cells[row, 16].GetValue<bool>();
+                        var projectId = worksheet.Cells[row, 17].GetValue<byte>();
+                        var notesId = worksheet.Cells[row, 18].GetValue<int>();
+                        var isFirstLogin = worksheet.Cells[row, 19].GetValue<bool>();
+                        var deptId = worksheet.Cells[row, 20].GetValue<byte>();
+                        var createdBy = worksheet.Cells[row, 21].GetValue<int>();
+                        var createdOn = worksheet.Cells[row, 22].GetValue<DateTime>();
+                        var modifiedBy = worksheet.Cells[row, 23].GetValue<int>();
+                        var modifiedOn = worksheet.Cells[row, 24].GetValue<DateTime>();
+                        var joinedOn = worksheet.Cells[row, 25].GetValue<DateTime>();
+                        var location = worksheet.Cells[row, 26].GetValue<string>();
+                        var isActiveColumn = worksheet.Cells[row, 27].GetValue<bool>();
+                        //   var password = worksheet.Cells[row, 28].GetValue<byte[]>();
+
+
+
+                        // Create a new row in the DataTable
+                        var dataRow = table.NewRow();
+                     //    dataRow["Id"] = id;
+                        dataRow["EmployeeNumber"] = employeeNumber;
+                        dataRow["FName"] = fName;
+                        dataRow["LName"] = lName;
+                        dataRow["Gender"] = gender;
+                        dataRow["DOB"] = dob;
+                        dataRow["Phone"] = phone;
+                        dataRow["OfficeEmail"] = officeEmail;
+                        dataRow["Mobile"] = mobile;
+                        dataRow["PersonalEmail"] = personalEmail;
+                        dataRow["EmployeeType"] = employeeType;
+                        dataRow["Experience"] = experience;
+                        dataRow["DesignationId"] = designationId;
+                        dataRow["IsInProject"] = isInProject;
+                        dataRow["IsUpskilling"] = isUpskilling;
+                        dataRow["IsWorkingOnInternalTool"] = isWorkingOnInternalTool;
+                        dataRow["ProjectId"] = projectId;
+                        dataRow["NotesId"] = notesId;
+                        dataRow["IsFirstLogin"] = isFirstLogin;
+                        dataRow["DeptId"] = deptId;
+                        dataRow["CreatedBy"] = createdBy;
+                        dataRow["CreatedOn"] = createdOn;
+                        dataRow["ModifiedBy"] = modifiedBy;
+                        dataRow["ModifiedOn"] = modifiedOn;
+                        dataRow["JoinedOn"] = joinedOn;
+                        dataRow["Location"] = location;
+                        dataRow["IsActive"] = isActiveColumn;
+                        //    dataRow["Password"] = password;
+                        table.Rows.Add(dataRow);
+                    }
+
+                    // Use SqlBulkCopy to insert the data into the database
+                    using (var bulkCopy = new SqlBulkCopy(connection))
+                    {
+                        bulkCopy.DestinationTableName = "users";
+                        bulkCopy.WriteToServer(table);
+                    }
+                }
+            }
+
+
+
+            Console.WriteLine("Data inserted");
+
+
+
+        }
+
+
+
+
+
+        //01/06/2023
+        //public void Import()
+        //{
+        //    try
+        //    {
+        //        string s = null;
+        //        var d = new DirectoryInfo(@"C:\Ganesh232");
+        //        var files = d.GetFiles("Import.xlsx");
+        //        var usersList = new List<ImportModelclass>();
+
+        //        foreach (var file in files)
+        //        {
+        //            var fileName = file.FullName;
+
+        //            using var package = new ExcelPackage(file);
+        //            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        //            var currentSheet = package.Workbook.Worksheets;
+        //            var workSheet = currentSheet.First();
+        //            var noOfCol = workSheet.Dimension.End.Column;
+        //            var noOfRow = workSheet.Dimension.End.Row;
+        //            for (int rowIterator = 2; rowIterator <= noOfRow; rowIterator++)
+        //            {
+        //                var user = new ImportModelclass
+        //                {
+        //                    EmployeeNumber = workSheet.Cells[rowIterator, 2].Value?.ToString(),
+        //                    FName = workSheet.Cells[rowIterator, 3].Value?.ToString(),
+        //                    LName = workSheet.Cells[rowIterator, 4].Value?.ToString(),
+        //                    Gender = workSheet.Cells[rowIterator, 5].Value?.ToString(),
+        //                    DOB = workSheet.Cells[rowIterator, 6].GetValue<DateTime>(),
+        //                    Phone = workSheet.Cells[rowIterator, 7].Value?.ToString(),
+        //                    OfficeEmail = workSheet.Cells[rowIterator, 8].Value?.ToString(),
+        //                    Mobile = workSheet.Cells[rowIterator, 9].Value?.ToString(),
+        //                    PersonalEmail = workSheet.Cells[rowIterator, 10].Value?.ToString(),
+        //                    EmployeeType = workSheet.Cells[rowIterator , 11].GetValue<bool>(),
+        //                    Experience = workSheet.Cells[rowIterator , 12].GetValue<byte>(),
+        //                    DesignationId = Convert.ToInt32(workSheet.Cells[rowIterator , 13].Value),
+        //                    IsInProject = workSheet.Cells[rowIterator , 14].GetCellValue<bool>(),
+        //                    IsUpskilling = workSheet.Cells[rowIterator, 15].GetCellValue<bool>(),
+        //                    IsWorkingOnInternalTool = workSheet.Cells[rowIterator, 16].GetCellValue<bool>(),
+        //                    ProjectId = Convert.ToInt32(workSheet.Cells[rowIterator , 17].Value),   
+        //                    NotesId = Convert.ToInt32(workSheet.Cells[rowIterator , 18].Value),
+        //                    IsFirstLogin = workSheet.Cells[rowIterator, 19].GetCellValue<bool>(),
+        //                    DeptId = Convert.ToInt32(workSheet.Cells[rowIterator , 20].Value),
+        //                    CreatedBy = Convert.ToInt32(workSheet.Cells[rowIterator , 21].Value),
+        //                    CreatedOn = Convert.ToDateTime(workSheet.Cells[rowIterator , 22].Value),
+        //                    ModifiedBy = Convert.ToInt32(workSheet.Cells[rowIterator , 23].Value),
+        //                    ModifiedOn = Convert.ToDateTime(workSheet.Cells[rowIterator , 24].Value),   
+        //                    JoinedOn = Convert.ToDateTime(workSheet.Cells[rowIterator , 25].Value), 
+        //                    Location = Convert.ToString(workSheet.Cells[rowIterator , 26].Value),
+        //                    IsActive = Convert.ToBoolean(workSheet.Cells[rowIterator , 27].Value),
+
+
+
+
+        //                };
+
+
+        //                usersList.Add(user);
+        //            }
+        //        }
+        //        var conn = "server=(localdb)\\mssqllocaldb;database=BMtool_Demo;Trusted_Connection=true";
+
+        //        using var connString = new SqlConnection(conn);
+        //        connString.Open();
+        //         InsertAsync(usersList, "[users]", connString, CancellationToken.None);
+        //    }
+
+
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine(e);
+        //        throw;
+        //    }
+        //}
+        //private static readonly ConcurrentDictionary<Type, SqlBulkCopyColumnMapping[]> ColumnMapping =
+        //    new ConcurrentDictionary<Type, SqlBulkCopyColumnMapping[]>();
+
+        //public static async Task InsertAsync<T>(IEnumerable<T> items, string tableName, SqlConnection connection,
+        //    CancellationToken cancellationToken)
+        //{
+        //    using var bulk = new SqlBulkCopy(connection);
+        //    await using var reader = ObjectReader.Create(items);
+        //    bulk.DestinationTableName = tableName;
+        //    foreach (var colMap in GetColumnMappings<T>())
+        //        bulk.ColumnMappings.Add(colMap);
+        //    await bulk.WriteToServerAsync(reader, cancellationToken);
+        //}
+
+        //private static IEnumerable<SqlBulkCopyColumnMapping> GetColumnMappings<T>() =>
+        //    ColumnMapping.GetOrAdd(typeof(T),
+        //        type =>
+        //            type.GetProperties()
+        //                .Select(p => new SqlBulkCopyColumnMapping(p.Name, p.Name)).ToArray());
     }
+
+  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
